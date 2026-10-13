@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CRUD Inventaris — Demo</title>
+<style>
+:root{
+  --bg:#eef1ee; --card:#ffffff; --ink:#14201c; --muted:#5d6b66; --line:#d9e0dc;
+  --brand:#0f6b57; --brand-d:#0a5242; --danger:#b42318; --warn:#b54708; --ok:#067647; --soft:#e3efe9;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#0e1512; --card:#16201c; --ink:#e6efeb; --muted:#9bada6; --line:#27352f; --brand:#3cc4a1; --brand-d:#5fd8b8; --soft:#1d2d27; --danger:#ff8a80; --warn:#ffb86b; --ok:#6fdc9d; }
+}
+:root[data-theme="dark"]{ --bg:#0e1512; --card:#16201c; --ink:#e6efeb; --muted:#9bada6; --line:#27352f; --brand:#3cc4a1; --brand-d:#5fd8b8; --soft:#1d2d27; --danger:#ff8a80; --warn:#ffb86b; --ok:#6fdc9d; }
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+.note{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.82rem;color:var(--muted);margin-bottom:14px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+h1{font-size:1.3rem;margin:0}
+h2{font-size:1rem;margin:0 0 8px}
+button,input,select{font:inherit}
+.btn{border:1px solid transparent;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;min-height:44px}
+.btn-primary{background:var(--brand);color:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn-primary{color:#06231b}}
+:root[data-theme="dark"] .btn-primary{color:#06231b}
+.btn-ghost{background:transparent;border-color:var(--line);color:var(--ink)}
+.btn-danger{background:transparent;border-color:var(--danger);color:var(--danger)}
+.btn-sm{min-height:38px;padding:6px 12px;font-size:.88rem}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat span{display:block;font-size:.72rem;color:var(--muted)}
+.stat strong{font-size:1.05rem;word-break:break-word}
+.search{display:flex;gap:8px;margin-bottom:12px}
+input,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);min-height:44px}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.item-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.item-name{font-weight:700}
+.price{font-weight:700;white-space:nowrap}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;font-size:.82rem;color:var(--muted)}
+.chip{background:var(--soft);border-radius:999px;padding:2px 10px;color:var(--ink)}
+.low{color:var(--warn);font-weight:700}
+.row-actions{display:flex;gap:8px;margin-top:6px}
+.row-actions .btn{flex:1}
+.pager{display:flex;gap:6px;justify-content:center;margin:12px 0}
+.pager button{min-width:42px}
+.pager .on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.empty{text-align:center;color:var(--muted);padding:26px 10px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:14px}
+.logs{list-style:none;margin:0;padding:0;font-size:.88rem}
+.logs li{padding:7px 0;border-bottom:1px solid var(--line)}
+.logs li:last-child{border:0}
+.tag{font-size:.72rem;font-weight:700;border-radius:6px;padding:1px 7px;margin-right:6px;background:var(--soft)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:12px;font-weight:600;font-size:.92rem;max-width:90%;z-index:20;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.toast.err{background:var(--danger);color:#fff}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:10}
+.sheet{background:var(--card);width:100%;max-width:720px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:92%;overflow:auto;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+label{display:block;font-weight:600;font-size:.86rem;margin:12px 0 5px}
+.err-t{color:var(--danger);font-size:.8rem;margin-top:3px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sheet-actions{display:flex;gap:10px;margin-top:18px}.sheet-actions .btn{flex:1}
+footer{text-align:center;color:var(--muted);font-size:.78rem;padding:18px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="note">Ini demo tampilan aplikasi CRUD Inventaris yang berjalan di browser HP. Versi aslinya memakai PHP + MySQL (PDO); data di sini hanya tersimpan sementara selama halaman terbuka.</div>
+  <header>
+    <h1>📦 Inventaris</h1>
+    <button class="btn btn-primary" id="addBtn">+ Tambah produk</button>
+  </header>
+  <section class="stats" id="stats"></section>
+  <div class="search">
+    <input type="search" id="q" placeholder="Cari produk, kategori, supplier">
+  </div>
+  <div id="list"></div>
+  <div class="pager" id="pager"></div>
+  <section class="panel"><h2>Log aktivitas</h2><ul class="logs" id="logs"></ul></section>
+  <footer>Tugas Rutin 8 — Pemrograman Web</footer>
+</div>
+<div id="modal"></div>
+<div id="toast"></div>
+
+<script>
+const categories=[{id:1,name:'Laptop'},{id:2,name:'Aksesoris'},{id:3,name:'Display'},{id:4,name:'Jaringan'},{id:5,name:'Penyimpanan'}];
+const suppliers=[{id:1,name:'PT Maju Jaya Teknologi'},{id:2,name:'CV Sumber Elektronik'},{id:3,name:'PT Nusantara Digital'},{id:4,name:'Toko Medan Komputer'},{id:5,name:'PT Global Perkasa'}];
+let products=[
+ {id:1,name:'Laptop ASUS Vivobook 14',category_id:1,supplier_id:1,price:8500000,stock:10},
+ {id:2,name:'Laptop Lenovo IdeaPad 3',category_id:1,supplier_id:3,price:7900000,stock:7},
+ {id:3,name:'Mouse Wireless Logitech',category_id:2,supplier_id:2,price:150000,stock:40},
+ {id:4,name:'Keyboard Mekanikal',category_id:2,supplier_id:2,price:450000,stock:25},
+ {id:5,name:'Monitor LED 24 inci',category_id:3,supplier_id:1,price:1750000,stock:12},
+ {id:6,name:'Router TP-Link AC1200',category_id:4,supplier_id:4,price:420000,stock:18},
+ {id:7,name:'SSD NVMe 512GB',category_id:5,supplier_id:5,price:680000,stock:30},
+ {id:8,name:'Flashdisk 64GB',category_id:5,supplier_id:4,price:85000,stock:6}
+];
+let logs=[],nextId=9,page=1,query='';const PER=5;
+const rp=n=>'Rp '+Math.round(n).toLocaleString('id-ID');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cat=id=>categories.find(c=>c.id===id)?.name||'-';
+const sup=id=>suppliers.find(s=>s.id===id)?.name||'-';
+const stamp=()=>new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+function log(a,d){logs.unshift({a,d,t:stamp()});logs=logs.slice(0,6)}
+function toast(msg,err){const t=document.getElementById('toast');t.innerHTML='<div class="toast'+(err?' err':'')+'" role="status">'+esc(msg)+'</div>';clearTimeout(toast.h);toast.h=setTimeout(()=>t.innerHTML='',2600)}
+
+function render(){
+  const q=query.toLowerCase();
+  const rows=products.filter(p=>[p.name,cat(p.category_id),sup(p.supplier_id)].some(x=>x.toLowerCase().includes(q)));
+  const pages=Math.max(1,Math.ceil(rows.length/PER));page=Math.min(page,pages);
+  const view=rows.slice((page-1)*PER,page*PER);
+  document.getElementById('stats').innerHTML=
+   `<div class="stat"><span>Jenis produk</span><strong>${products.length}</strong></div>
+    <div class="stat"><span>Total stok</span><strong>${products.reduce((a,p)=>a+p.stock,0)}</strong></div>
+    <div class="stat"><span>Nilai aset</span><strong>${rp(products.reduce((a,p)=>a+p.price*p.stock,0))}</strong></div>`;
+  document.getElementById('list').innerHTML=view.length?view.map(p=>`
+   <article class="item">
+     <div class="item-top"><div class="item-name">${esc(p.name)}</div><div class="price">${rp(p.price)}</div></div>
+     <div class="meta"><span class="chip">${esc(cat(p.category_id))}</span><span>${esc(sup(p.supplier_id))}</span><span>Stok: <b class="${p.stock<10?'low':''}">${p.stock}</b></span></div>
+     <div class="row-actions"><button class="btn btn-ghost btn-sm" data-edit="${p.id}">Edit</button><button class="btn btn-danger btn-sm" data-del="${p.id}">Hapus</button></div>
+   </article>`).join(''):'<div class="empty">Tidak ada produk yang cocok. Coba kata kunci lain atau tambah produk baru.</div>';
+  document.getElementById('pager').innerHTML=pages>1?Array.from({length:pages},(_,i)=>`<button class="btn btn-ghost btn-sm ${i+1===page?'on':''}" data-page="${i+1}">${i+1}</button>`).join(''):'';
+  document.getElementById('logs').innerHTML=logs.length?logs.map(l=>`<li><span class="tag">${l.a}</span>${esc(l.d)} <small style="color:var(--muted)">· ${l.t}</small></li>`).join(''):'<li style="color:var(--muted)">Belum ada aktivitas. Coba tambah, edit, atau hapus produk.</li>';
+}
+
+function openForm(id){
+  const p=id?products.find(x=>x.id===id):{name:'',category_id:'',supplier_id:'',price:'',stock:0};
+  const opt=(arr,sel)=>'<option value="">Pilih…</option>'+arr.map(a=>`<option value="${a.id}" ${a.id===sel?'selected':''}>${esc(a.name)}</option>`).join('');
+  document.getElementById('modal').innerHTML=`
+  <div class="sheet-bg" id="bg"><div class="sheet" role="dialog" aria-modal="true">
+    <h2>${id?'Edit produk':'Tambah produk'}</h2>
+    <label for="f-name">Nama produk</label><input id="f-name" maxlength="150" value="${esc(p.name)}"><div class="err-t" id="e-name"></div>
+    <div class="two"><div><label for="f-cat">Kategori</label><select id="f-cat">${opt(categories,p.category_id)}</select><div class="err-t" id="e-cat"></div></div>
+    <div><label for="f-sup">Supplier</label><select id="f-sup">${opt(suppliers,p.supplier_id)}</select><div class="err-t" id="e-sup"></div></div></div>
+    <div class="two"><div><label for="f-price">Harga (Rp)</label><input id="f-price" type="number" inputmode="numeric" min="0" value="${p.price}"><div class="err-t" id="e-price"></div></div>
+    <div><label for="f-stock">Stok</label><input id="f-stock" type="number" inputmode="numeric" min="0" value="${p.stock}"><div class="err-t" id="e-stock"></div></div></div>
+    <div class="sheet-actions"><button class="btn btn-ghost" id="cancel">Batal</button><button class="btn btn-primary" id="save">${id?'Simpan perubahan':'Simpan produk'}</button></div>
+  </div></div>`;
+  document.getElementById('f-name').focus();
+  const close=()=>document.getElementById('modal').innerHTML='';
+  document.getElementById('cancel').onclick=close;
+  document.getElementById('bg').onclick=e=>{if(e.target.id==='bg')close()};
+  document.getElementById('save').onclick=()=>{
+    const name=document.getElementById('f-name').value.trim(),c=+document.getElementById('f-cat').value,s=+document.getElementById('f-sup').value,
+      price=document.getElementById('f-price').value,stock=document.getElementById('f-stock').value;
+    const E={name:!name?'Nama produk wajib diisi.':'',cat:!c?'Pilih kategori.':'',sup:!s?'Pilih supplier.':'',
+      price:(price===''||+price<0)?'Harga harus angka 0 atau lebih.':'',stock:(stock===''||+stock<0||!Number.isInteger(+stock))?'Stok harus bilangan bulat 0 atau lebih.':''};
+    let bad=false;for(const k in E){document.getElementById('e-'+k).textContent=E[k];if(E[k])bad=true}
+    if(bad)return;
+    if(id){Object.assign(p,{name,category_id:c,supplier_id:s,price:+price,stock:+stock});log('UPDATE',`Produk "${name}" diperbarui`);toast('Produk berhasil diperbarui.')}
+    else{products.push({id:nextId++,name,category_id:c,supplier_id:s,price:+price,stock:+stock});log('CREATE',`Produk "${name}" ditambahkan`);toast('Produk berhasil ditambahkan.')}
+    close();render();
+  };
+}
+function confirmDelete(id){
+  const p=products.find(x=>x.id===id);
+  document.getElementById('modal').innerHTML=`<div class="sheet-bg" id="bg"><div class="sheet" role="dialog" aria-modal="true">
+    <h2>Hapus produk?</h2><p>"${esc(p.name)}" akan dihapus dari inventaris dan tidak bisa dikembalikan.</p>
+    <div class="sheet-actions"><button class="btn btn-ghost" id="cancel">Batal</button><button class="btn btn-danger" id="ok">Hapus produk</button></div></div></div>`;
+  const close=()=>document.getElementById('modal').innerHTML='';
+  document.getElementById('cancel').onclick=close;
+  document.getElementById('bg').onclick=e=>{if(e.target.id==='bg')close()};
+  document.getElementById('ok').onclick=()=>{products=products.filter(x=>x.id!==id);log('DELETE',`Produk "${p.name}" dihapus`);toast('Produk berhasil dihapus.');close();render()};
+}
+document.getElementById('addBtn').onclick=()=>openForm();
+document.getElementById('q').oninput=e=>{query=e.target.value;page=1;render()};
+document.body.addEventListener('click',e=>{
+  const t=e.target.closest('[data-edit],[data-del],[data-page]');if(!t)return;
+  if(t.dataset.edit)openForm(+t.dataset.edit);
+  else if(t.dataset.del)confirmDelete(+t.dataset.del);
+  else{page=+t.dataset.page;render()}
+});
+render();
+</script>
+</body>
+</html>
